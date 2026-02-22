@@ -14,7 +14,17 @@ export class BareWrite extends HTMLElement {
 
     const style = document.createElement("style");
 
-    style.textContent = styleText;
+    style.textContent = `
+      :host {
+        all: initial;
+      }
+
+      #mount-point {
+        all: initial;
+      }
+
+      ${styleText}
+    `;
 
     /**
      *
@@ -32,4 +42,6 @@ export class BareWrite extends HTMLElement {
   }
 }
 
-customElements.define("bare-write", BareWrite);
+if (!customElements.get("bare-write")) {
+  customElements.define("bare-write", BareWrite);
+}

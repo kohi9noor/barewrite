@@ -86,7 +86,7 @@ export const DraggableDialog = ({ isOpen, position, onClose }: DialogProps) => {
         left: 0,
         top: 0,
         transform: `translate(${position.x}px, ${position.y}px)`,
-        zIndex: 10000,
+        zIndex: 2147483647,
         backgroundColor: "white",
         borderRadius: "8px",
         boxShadow:
@@ -96,6 +96,7 @@ export const DraggableDialog = ({ isOpen, position, onClose }: DialogProps) => {
         maxWidth: "500px",
         fontFamily: "system-ui, -apple-system, sans-serif",
         willChange: "transform",
+        pointerEvents: "auto",
       }}
     >
       <div

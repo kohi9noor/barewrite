@@ -45,10 +45,16 @@ export function useDialogManager() {
 
   useEffect(() => {
     const handleEditorSelected = (event: Event) => {
+      console.log("Editor selected event received:", event);
       const customEvent = event as EditorSelectedEvent;
       const { element, editorType, clickX, clickY } = customEvent.detail;
-
-      openDialog(element, editorType, clickX, clickY);
+      console.log("Opening dialog with:", { clickX, clickY, editorType });
+      setState({
+        isOpen: true,
+        position: { x: clickX, y: clickY },
+        selectedEditor: element,
+        editorType,
+      });
     };
 
     document.addEventListener(
@@ -62,7 +68,7 @@ export function useDialogManager() {
         handleEditorSelected,
       );
     };
-  }, [openDialog]);
+  }, []);
 
   return {
     isOpen: state.isOpen,

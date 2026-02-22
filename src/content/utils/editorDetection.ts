@@ -26,25 +26,54 @@ export function detectEditorType(el: HTMLElement): string {
 }
 
 export function injectIndicator(target: HTMLElement): void {
-  const parent = target.parentElement;
-  if (!parent) return;
-
-  const parentStyle = window.getComputedStyle(parent);
-  if (parentStyle.position === "static") {
-    parent.style.position = "relative";
-  }
-
   const host = document.createElement("div");
-  host.style.position = "absolute";
-  host.style.bottom = "50%";
-  host.style.transform = "translateY(50%)";
-  host.style.right = "10px";
+  host.style.position = "fixed";
+  host.style.transform = "translate(-50%, -50%)";
   host.style.borderRadius = "100%";
   host.style.pointerEvents = "auto";
-  host.style.zIndex = "9999";
+  host.style.zIndex = "2147483647";
   host.style.cursor = "pointer";
+  host.style.width = "14px";
+  host.style.height = "14px";
+  host.style.border = "2px solid #8F9779";
+  host.style.backgroundColor = "#EEF1E8";
+  host.style.boxSizing = "border-box";
 
-  parent.appendChild(host);
+  const updatePosition = () => {
+    if (!target.isConnected) {
+      cleanup();
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    host.style.left = `${Math.max(8, rect.right - 10)}px`;
+    host.style.top = `${Math.max(8, rect.top + rect.height / 2)}px`;
+  };
+
+  let rafId = 0;
+  const schedulePositionUpdate = () => {
+    if (rafId) return;
+    rafId = window.requestAnimationFrame(() => {
+      rafId = 0;
+      updatePosition();
+    });
+  };
+
+  const cleanup = () => {
+    window.removeEventListener("scroll", updatePosition, true);
+    window.removeEventListener("resize", updatePosition, true);
+    if (rafId) {
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+    observer.disconnect();
+    host.remove();
+  };
+
+  const observer = new MutationObserver(schedulePositionUpdate);
+
+  const rootParent = document.documentElement || document.body;
+  rootParent.appendChild(host);
 
   const shadowRoot = host.attachShadow({ mode: "open" });
 
@@ -52,12 +81,18 @@ export function injectIndicator(target: HTMLElement): void {
   indicator.style.width = "10px";
   indicator.style.height = "10px";
   indicator.style.borderRadius = "50%";
-  host.style.border = "2px solid #8F9779";
-  host.style.backgroundColor = "#EEF1E8";
+  indicator.style.margin = "auto";
   shadowRoot.appendChild(indicator);
 
-  // Add click handler to dispatch custom event
-  host.addEventListener("click", (e: MouseEvent) => {
+  updatePosition();
+  window.addEventListener("scroll", updatePosition, true);
+  window.addEventListener("resize", updatePosition, true);
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+
+  host.addEventListener("click", () => {
     const editorType = detectEditorType(target);
     const rect = host.getBoundingClientRect();
 
