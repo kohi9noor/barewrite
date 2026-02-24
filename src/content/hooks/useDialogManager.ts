@@ -49,12 +49,7 @@ export function useDialogManager() {
       const customEvent = event as EditorSelectedEvent;
       const { element, editorType, clickX, clickY } = customEvent.detail;
       console.log("Opening dialog with:", { clickX, clickY, editorType });
-      setState({
-        isOpen: true,
-        position: { x: clickX, y: clickY },
-        selectedEditor: element,
-        editorType,
-      });
+      openDialog(element, editorType, clickX, clickY);
     };
 
     document.addEventListener(

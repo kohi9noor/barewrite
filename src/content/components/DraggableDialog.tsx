@@ -1,172 +1,139 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
+import { XIcon } from "lucide-react";
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface DialogProps {
+interface DraggableDialogProps {
   isOpen: boolean;
-  position: Position;
   onClose: () => void;
+  position: { x: string; y: string };
 }
 
-export const DraggableDialog = ({ isOpen, position, onClose }: DialogProps) => {
+const DraggableDialog = (props: DraggableDialogProps) => {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const isDraggingRef = useRef(false);
-  const dragOffsetRef = useRef({ x: 0, y: 0 });
-  const currentPosRef = useRef(position);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (!dialogRef.current) return;
-
-    const rect = dialogRef.current.getBoundingClientRect();
-    dragOffsetRef.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-    isDraggingRef.current = true;
-    dialogRef.current.style.cursor = "grabbing";
-  }, []);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDraggingRef.current || !dialogRef.current) return;
-
-    const newX = e.clientX - dragOffsetRef.current.x;
-    const newY = e.clientY - dragOffsetRef.current.y;
-
-    currentPosRef.current = { x: newX, y: newY };
-
-    dialogRef.current.style.transform = `translate(${newX}px, ${newY}px)`;
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
-    isDraggingRef.current = false;
+  // Sync position prop if it changes externally
+  useEffect(() => {
     if (dialogRef.current) {
-      dialogRef.current.style.cursor = "default";
+      dialogRef.current.style.top = props.position.y;
+      dialogRef.current.style.left = props.position.x;
     }
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
-    },
-    [isOpen, onClose],
-  );
-
-  useEffect(() => {
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [handleMouseMove, handleMouseUp]);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    }
-  }, [isOpen, handleKeyDown]);
-
-  if (!isOpen) return null;
+  }, [props.position]);
 
   return (
     <div
       ref={dialogRef}
       style={{
-        position: "fixed",
-        left: 0,
-        top: 0,
-        transform: `translate(${position.x}px, ${position.y}px)`,
-        zIndex: 2147483647,
+        position: "absolute",
+        width: "360px",
         backgroundColor: "white",
         borderRadius: "8px",
         boxShadow:
-          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-        border: "1px solid #e5e7eb",
-        minWidth: "300px",
-        maxWidth: "500px",
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        willChange: "transform",
-        pointerEvents: "auto",
+          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+        overflow: "hidden",
+        zIndex: 9999,
+        transition: props.isOpen
+          ? "opacity 300ms"
+          : "opacity 300ms, visibility 300ms",
+        opacity: props.isOpen ? 1 : 0,
+        pointerEvents: props.isOpen ? "auto" : "none",
+        top: props.position.y,
+        left: props.position.x,
+        fontFamily: "Inter, sans-serif",
       }}
     >
-      <div
-        onMouseDown={handleMouseDown}
-        style={{
-          background: "linear-gradient(to right, #3b82f6, #2563eb)",
-          color: "white",
-          padding: "12px 16px",
-          borderRadius: "8px 8px 0 0",
-          cursor: "move",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          userSelect: "none",
-          WebkitUserSelect: "none" as any,
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: "14px", fontWeight: "600" }}>
-          Barewrite
-        </h2>
-        <button
-          onClick={onClose}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "white",
-            cursor: "pointer",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "background-color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              "rgba(255, 255, 255, 0.2)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.backgroundColor =
-              "transparent";
-          }}
-          aria-label="Close dialog"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <line x1="1" y1="1" x2="17" y2="17" />
-            <line x1="17" y1="1" x2="1" y2="17" />
-          </svg>
-        </button>
-      </div>
-
-      <div
-        style={{
-          padding: "16px",
-          backgroundColor: "#f9fafb",
-          borderRadius: "0 0 8px 8px",
-          minHeight: "100px",
-        }}
-      >
-        <p style={{ margin: 0, color: "#4b5563", fontSize: "14px" }}>
-          Dialog content goes here
+      <DialogHeader onClose={props.onClose} dialogRef={dialogRef} />
+      <div style={{ padding: "16px" }}>
+        <p style={{ margin: 0, fontSize: "14px", color: "#374151" }}>
+          Dialog Content
         </p>
       </div>
     </div>
   );
 };
+
+const DialogHeader = ({
+  onClose,
+  dialogRef,
+}: {
+  onClose: () => void;
+  dialogRef: React.RefObject<HTMLDivElement | null>;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!dialogRef.current) return;
+
+    setIsDragging(true);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    const rect = dialogRef.current.getBoundingClientRect();
+    const initialLeft = rect.left;
+    const initialTop = rect.top;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!dialogRef.current) return;
+
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+
+      dialogRef.current.style.left = `${initialLeft + deltaX}px`;
+      dialogRef.current.style.top = `${initialTop + deltaY}px`;
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  return (
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onMouseDown={handleMouseDown}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: isHovered || isDragging ? "#d1d5db" : "#e5e7eb",
+        height: "40px",
+        padding: "0 12px",
+        color: "black",
+        borderBottom: "1px solid #d1d5db",
+        cursor: isDragging ? "grabbing" : "grab",
+        userSelect: "none",
+      }}
+    >
+      <img
+        src={chrome.runtime.getURL("logo.svg")}
+        style={{ width: "24px", height: "24px", objectFit: "contain" }}
+      />
+      <button
+        onClick={onClose}
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: "4px",
+          display: "flex",
+          alignItems: "center",
+          opacity: 0.6,
+          transition: "opacity 0.2s",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+      >
+        <XIcon size={16} />
+      </button>
+    </div>
+  );
+};
+
+export default DraggableDialog;

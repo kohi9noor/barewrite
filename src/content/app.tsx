@@ -1,6 +1,6 @@
 import { useEditorDetection } from "./hooks/useEditorDetection";
 import { useDialogManager } from "./hooks/useDialogManager";
-import { DraggableDialog } from "./components/DraggableDialog";
+import  DraggableDialog from "./components/DraggableDialog";
 
 const App = () => {
   useEditorDetection();

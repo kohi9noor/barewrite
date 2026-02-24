@@ -94,14 +94,20 @@ export function injectIndicator(target: HTMLElement): void {
 
   host.addEventListener("click", () => {
     const editorType = detectEditorType(target);
-    const rect = host.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
+
+    const viewPortWidth = window.innerWidth;
+    const viewPortHeight = window.innerHeight;
 
     const event = new CustomEvent("barewrite:editor-selected", {
       detail: {
         element: target,
         editorType,
-        clickX: rect.left,
-        clickY: rect.top,
+        clientX: Math.min(viewPortWidth - 1, Math.max(0, rect.right)),
+        clientY: Math.min(
+          viewPortHeight - 1,
+          Math.max(0, rect.top + rect.height / 2),
+        ),
       },
       bubbles: true,
     });

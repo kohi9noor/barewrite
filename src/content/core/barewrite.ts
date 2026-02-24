@@ -13,18 +13,7 @@ export class BareWrite extends HTMLElement {
     const shadow = this.attachShadow({ mode: "open" });
 
     const style = document.createElement("style");
-
-    style.textContent = `
-      :host {
-        all: initial;
-      }
-
-      #mount-point {
-        all: initial;
-      }
-
-      ${styleText}
-    `;
+    style.textContent = styleText;
 
     /**
      *

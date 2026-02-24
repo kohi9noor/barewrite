@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+:host {
+  all: initial; /* Resets styles for the custom element itself */
+  display: block;
+}
+
+#mount-point {
+  /* Ensure the container uses the Inter font */
+  font-family: "Inter", sans-serif;
+}
+
+/* Optional: if you want to apply Inter to everything inside */
+* {
+  font-family: "Inter", sans-serif;
+}
